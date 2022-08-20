@@ -1,6 +1,7 @@
 import 'package:final_project/src/connection/server_controller.dart';
 import 'package:final_project/src/screens/home.dart';
 import 'package:final_project/src/screens/login.dart';
+import 'package:final_project/src/screens/register.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_modulo1_fake_backend/user.dart';
 
@@ -26,6 +27,8 @@ class MyApp extends StatelessWidget {
             case '/home':
               User userLogged = settings.arguments as User;
               return HomeScreen(userLogged);
+            case '/register':
+              return RegisterScreen(_serverController, context);
             default:
               return LoginScreen(_serverController, context);
           }

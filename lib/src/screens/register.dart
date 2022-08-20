@@ -1,20 +1,24 @@
+import 'dart:io';
+
+import 'package:final_project/src/components/image_picker.dart';
 import 'package:final_project/src/connection/server_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_modulo1_fake_backend/user.dart';
 
-class LoginScreen extends StatefulWidget {
+class RegisterScreen extends StatefulWidget {
   ServerController _serverController;
   BuildContext context;
 
-  LoginScreen(this._serverController, this.context, {super.key});
+  RegisterScreen(this._serverController, this.context, {super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   bool _loading = false;
-  bool _unauthorized = false;
+  bool _error = false;
+  File? imageFile;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   String username = "";
   String password = "";
@@ -25,20 +29,23 @@ class _LoginScreenState extends State<LoginScreen> {
         key: _formKey,
         child: Stack(children: [
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 100),
-            width: double.infinity,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(colors: [
-                Colors.cyan,
-                Colors.black,
-              ]),
-            ),
-            height: 350,
-            child: Image.asset(
-              'assets/logo.png',
-              color: Colors.white,
-            ),
-          ),
+              padding: const EdgeInsets.symmetric(vertical: 0),
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(colors: [
+                  Colors.cyan,
+                  Colors.black,
+                ]),
+              ),
+              height: 350,
+              child: ImagePickerWidget(
+                imageFile: imageFile,
+                onImageSelected: (File file) {
+                  setState(() {
+                    imageFile = file;
+                  });
+                },
+              )),
           Transform.translate(
             offset: const Offset(0, 80),
             child: Center(
@@ -92,7 +99,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         RaisedButton(
                           padding: const EdgeInsets.symmetric(vertical: 15),
                           onPressed: () {
-                            _login(context);
+                            _register(context);
                           },
                           color: Theme.of(context).primaryColor,
                           textColor: Colors.white,
@@ -100,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Text('Iniciar Sesión'),
+                                const Text('Registrarse'),
                                 if (_loading)
                                   Container(
                                     height: 20,
@@ -117,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(
                           height: 20,
                         ),
-                        if (_unauthorized)
+                        if (_error)
                           const Center(
                             child: Text(
                               'Credenciales incorrectas',
@@ -127,24 +134,19 @@ class _LoginScreenState extends State<LoginScreen> {
                         const SizedBox(
                           height: 20,
                         ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text('No estas registrado?'),
-                            FlatButton(
-                              textColor: Theme.of(context).primaryColor,
-                              onPressed: () {
-                                _showRegister(context);
-                              },
-                              child: const Text('Registrate'),
-                            )
-                          ],
-                        )
                       ],
                     ),
                   ),
                 ),
               ),
+            ),
+          ),
+          SizedBox(
+            height: kToolbarHeight + 25,
+            child: AppBar(
+              iconTheme: const IconThemeData(color: Colors.white),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
             ),
           )
         ]),
@@ -152,37 +154,28 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  void _login(BuildContext context) async {
+  void _register(BuildContext context) async {
     if (!_loading) {
       setState(() {
         _loading = true;
       });
       if (_formKey.currentState!.validate()) {
-        setState(() {
-          _unauthorized = false;
-        });
         _formKey.currentState!.save();
-        List<User> users = await widget._serverController.getUsers();
-        print((users[users.length - 1] as User).nickname);
-        User user = await widget._serverController.login(username, password);
-
-        if (user == null) {
+        bool userAdded = await widget._serverController
+            .register(username, password, imageFile!);
+        print(userAdded);
+        if (userAdded == false) {
           setState(() {
             _loading = false;
-            _unauthorized = true;
           });
         } else {
-          Navigator.of(context).pushReplacementNamed('/home', arguments: user);
+          Navigator.of(context).pop();
         }
       }
     }
     setState(() {
       _loading = false;
     });
-  }
-
-  void _showRegister(BuildContext context) {
-    Navigator.of(context).pushNamed('/register');
   }
 
   @override
