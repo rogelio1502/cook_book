@@ -1,6 +1,10 @@
+import 'package:final_project/src/connection/server_controller.dart';
 import 'package:final_project/src/screens/home.dart';
 import 'package:final_project/src/screens/login.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_modulo1_fake_backend/user.dart';
+
+ServerController _serverController = ServerController();
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -14,11 +18,18 @@ class MyApp extends StatelessWidget {
         accentColor: Colors.cyan[300],
       ),
       title: 'Material App',
-      initialRoute: "/",
-      routes: {
-        "/home": (context) => const HomeScreen(),
-        "/": (context) => const LoginScreen(),
-        "/register": (context) => const LoginScreen()
+      onGenerateRoute: (RouteSettings settings) {
+        return MaterialPageRoute(builder: (BuildContext context) {
+          switch (settings.name) {
+            case '/':
+              return LoginScreen(_serverController, context);
+            case '/home':
+              User userLogged = settings.arguments as User;
+              return HomeScreen(userLogged);
+            default:
+              return LoginScreen(_serverController, context);
+          }
+        });
       },
     );
   }
